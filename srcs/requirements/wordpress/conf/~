@@ -1,0 +1,18 @@
+[www] # Nom du pool PHP-FPM
+
+user = www-data # Utilisateur sous lequel les processus PHP-FPM seront exécutés
+group = www-data # Groupe sous lequel les processus PHP-FPM seront exécutés
+
+listen = 0.0.0.0:9000 # Adresse et port sur lesquels PHP-FPM écoutera les requêtes
+
+listen.owner = www-data # Propriétaire du socket PHP-FPM
+listen.group = www-data # Groupe du socket PHP-FPM
+
+pm = dynamic # Mode de gestion des processus (dynamique, statique ou ondemand)
+
+pm.max_children = 5 # Nombre maximal de processus enfants PHP-FPM à démarrer
+
+pm.start_servers = 2 # Nombre de processus enfants à démarrer au lancement de PHP-FPM
+
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3 

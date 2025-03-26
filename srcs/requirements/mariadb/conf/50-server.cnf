@@ -1,0 +1,60 @@
+# Configuration du serveur MariaDB
+
+[server]
+# Cette section pourrait contenir des paramètres globaux, mais elle est vide dans ce cas.
+
+[mysqld]
+# Paramètres spécifiques au serveur MariaDB
+
+# Utilisateur sous lequel le processus du serveur MariaDB s'exécute
+user = mysql
+
+# Chemin vers le fichier PID du processus du serveur MariaDB
+pid-file = /run/mysqld/mysqld.pid
+
+# Chemin vers le fichier socket utilisé pour les connexions locales au serveur MariaDB
+socket = /run/mysqld/mysqld.sock
+
+# Port sur lequel le serveur MariaDB écoute les connexions
+port = 3306
+
+# Répertoire d'installation de MariaDB
+basedir = /usr
+
+# Répertoire de stockage des données de MariaDB
+datadir = /var/lib/mysql
+
+# Répertoire temporaire utilisé par MariaDB
+tmpdir = /tmp
+
+# Répertoire contenant les fichiers de messages du serveur MariaDB
+lc-messages-dir = /usr/share/mysql
+
+# Adresse IP à laquelle le serveur MariaDB est lié pour les connexions entrantes
+bind-address = 0.0.0.0
+
+# Taille de la mémoire tampon de cache de requête
+query_cache_size = 16M
+
+# Chemin vers le fichier de journalisation des erreurs du serveur MariaDB
+log_error = /var/log/mysql/error.log
+
+# Nombre de jours avant l'expiration des journaux de requêtes
+expire_logs_days = 10
+
+# Jeu de caractères par défaut pour la base de données
+character-set-server = utf8mb4
+
+# Collation par défaut pour la base de données
+collation-server = utf8mb4_general_ci
+
+# Sections supplémentaires (vides dans ce cas)
+
+[embedded]
+# Paramètres pour l'utilisation de MariaDB dans des environnements intégrés
+
+[mariadb]
+# Paramètres spécifiques à MariaDB
+
+[mariadb-10.3]
+# Paramètres spécifiques à une version spécifique de MariaDB
