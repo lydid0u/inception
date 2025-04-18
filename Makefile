@@ -1,51 +1,45 @@
-# Variables
-DOCKER_COMPOSE_FILE := ./srcs/docker-compose.yml
-DATA_DIR := /home/lboudjel/data
-MARIADB_DATA_DIR := $(DATA_DIR)/mariadb
-WORDPRESS_DATA_DIR := $(DATA_DIR)/wordpress
+DC := sudo docker-compose -f srcs/docker-compose.yml
 
-# Commandes
+all:
+	@mkdir -p /home/lboudjel/data/mariadb
+	@mkdir -p /home/lboudjel/data/wordpress
+	@docker ps -q | grep . || $(DC) up --build -d
+
+build:
+	$(DC) build
+
 up:
-	mkdir -p $(MARIADB_DATA_DIR)
-	mkdir -p $(WORDPRESS_DATA_DIR)
-	docker compose -f $(DOCKER_COMPOSE_FILE) up --build -d
+	$(DC) up -d
+
+stop:
+	$(DC) stop
+
+start:
+	$(DC) start
 
 down:
-	docker compose -f $(DOCKER_COMPOSE_FILE) down
+	$(DC) down
 
 clean:
-	docker system prune
-	# -docker volume rm $(DOCKER_COMPOSE_FILE)_mariadb-vol
-	# -docker volume rm $(DOCKER_COMPOSE_FILE)_wordpress-vol
+	$(DC) down --rmi all --volumes
 
-show:
-	docker ps
-	docker volume ls -q
-	docker container ls -q
+fclean:
+	sudo docker system prune -a --volumes
+	sudo rm -rf /home/lboudjel/data
 
-del:
-	docker system prune -af
-	docker stop `docker ps -q`
-	docker rm `docker ps -aq`
-	docker rmi `docker image ls -aq`
-	docker volume rm `docker volume ls -q`
-	docker network rm `docker network ls -q`
-	docker system prune -af
+re: fclean all
 
-renew:
-	make down
-	-docker volume rm $(DATA_DIR)_mariadb-vol
-	-docker volume rm $(DATA_DIR)_wordpress-vol
-	sudo rm -rf $(DATA_DIR)
-	make up
+logs:
+	$(DC) logs
 
-see:
-	docker logs mywordpress
-	docker logs mydb
-	docker logs mynginx
+help:
+	@echo "Utilisez 'make all' pour construire et démarrer les services."
+	@echo "Utilisez 'make build' pour construire les services."
+	@echo "Utilisez 'make up' pour lancer les services en arrière-plan."
+	@echo "Utilisez 'make down' pour arrêter les services."
+	@echo "Utilisez 'make clean' pour arrêter et supprimer les conteneurs, réseaux, images, et volumes."
+	@echo "Utilisez 'make fclean' pour un nettoyage complet, y compris les volumes non anonymes."
+	@echo "Utilisez 'make re' pour reconstruire et redémarrer les services."
+	@echo "Utilisez 'make logs' pour afficher les logs des services."
 
-restart:
-	make down
-	make up
-
-.PHONY: up down clean show renew see restart
+.PHONY: all build up stop start down clean fclean re logs help
