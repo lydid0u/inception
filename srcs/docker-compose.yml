@@ -1,59 +1,123 @@
-version: '3.7'
+version: '3'
 
 services:
-    nginx:
-      container_name: nginx 
-      depends_on:
-        - wordpress # dépendance de nginx avec wp
-      build: ./requirements/nginx  #path vers le Dockerfile pour build le container nginx
-      ports:
-        - "443:443"  #port 443 du container sur le port de la machine
-      volumes:
-        - wordpress-vol:/var/www/inception  #cree le volume partage avec wp pour qu'nginx accede aux fichiers html de wp
-      networks:
-        - network  #on connecte les 3 conteneurs sur un mm reseau pour leur permettre de communiquer entre eux
-      restart: always  # redemarrage auto du conteneur en cas d'échec
+  nginx:
+    container_name: nginx
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress_data:/var/www/html
+    depends_on:
+      - wordpress
+    restart: always
+    networks:
+      - inception_network
 
-    wordpress:
-      depends_on:
-        - mariadb  # depedance de wp avec mariadp
-      container_name: wordpress
-      build: ./requirements/wordpress 
-      env_file:
-        - .env  # fichier d'env qui contient les variables d'environnement
-      networks:
-        - network  
-      volumes:
-        - wordpress-vol:/var/www/inception
-      restart: always
+  wordpress:
+    container_name: wordpress
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+    volumes:
+      - wordpress_data:/var/www/html
+    depends_on:
+      - mariadb
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - inception_network
 
-    mariadb:
-      container_name: mariadb 
-      build: ./requirements/mariadb
-      restart: always
-      env_file:
-        - .env
-      networks:
-        - network  
-      volumes:
-        - mariadb-vol:/var/lib/mysql  
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - inception_network
 
-# creation des volumes pour la persistance des donnes mariadb et des fichiers wordpress
 volumes:
-  mariadb-vol:
-    driver: local #on utilise le stockage local
-    driver_opts: #"bind mount" (montage direct) vers le dossier sur la machine donne par - device
-      type: none
-      o: bind
-      device: /home/lboudjel/data/mariadb
-  wordpress-vol:
+  wordpress_data:
     driver: local
-    driver_opts: 
+    driver_opts:
       type: none
+      device: /home/${USER}/data/wordpress
       o: bind
-      device: /home/lboudjel/data/wordpress
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/${USER}/data/mariadb
+      o: bind
 
-# definition du réseau partage entre les 3 conteneur
 networks:
-  network:
-    driver: bridge   # reseau par defaut de docker
+  inception_network:
+    driver: bridge
+
+# version: '3.7'
+
+# services:
+#     nginx:
+#       container_name: nginx 
+#       depends_on:
+#         - wordpress # dépendance de nginx avec wp
+#       build: ./requirements/nginx  #path vers le Dockerfile pour build le container nginx
+#       ports:
+#         - "443:443"  #port 443 du container sur le port de la machine
+#       volumes:
+#         - wordpress-vol:/var/www/inception  #cree le volume partage avec wp pour qu'nginx accede aux fichiers html de wp
+#       networks:
+#         - network  #on connecte les 3 conteneurs sur un mm reseau pour leur permettre de communiquer entre eux
+#       restart: always  # redemarrage auto du conteneur en cas d'échec
+
+#     wordpress:
+#       depends_on:
+#         - mariadb  # depedance de wp avec mariadp
+#       container_name: wordpress
+#       build: ./requirements/wordpress 
+#       env_file:
+#         - .env  # fichier d'env qui contient les variables d'environnement
+#       networks:
+#         - network  
+#       volumes:
+#         - wordpress-vol:/var/www/inception
+#       restart: always
+
+#     mariadb:
+#       container_name: mariadb 
+#       build: ./requirements/mariadb
+#       restart: always
+#       env_file:
+#         - .env
+#       networks:
+#         - network  
+#       volumes:
+#         - mariadb-vol:/var/lib/mysql  
+
+# # creation des volumes pour la persistance des donnes mariadb et des fichiers wordpress
+# volumes:
+#   mariadb-vol:
+#     driver: local #on utilise le stockage local
+#     driver_opts: #"bind mount" (montage direct) vers le dossier sur la machine donne par - device
+#       type: none
+#       o: bind
+#       device: /home/lboudjel/data/mariadb
+#   wordpress-vol:
+#     driver: local
+#     driver_opts: 
+#       type: none
+#       o: bind
+#       device: /home/lboudjel/data/wordpress
+
+# # definition du réseau partage entre les 3 conteneur
+# networks:
+#   network:
+#     driver: bridge   # reseau par defaut de docker
