@@ -1,44 +1,35 @@
-FROM debian:bullseye
+FROM debian:buster
 
-# Install PHP and required extensions
 RUN apt-get update && apt-get install -y \
-    php7.4-fpm \
-    php7.4-mysql \
-    php7.4-curl \
-    php7.4-gd \
-    php7.4-intl \
-    php7.4-mbstring \
-    php7.4-soap \
-    php7.4-xml \
-    php7.4-xmlrpc \
-    php7.4-zip \
+    php7.3 \
+    php7.3-fpm \
+    php7.3-mysql \
+    php7.3-gd \
+    php7.3-curl \
+    php7.3-xml \
+    php7.3-mbstring \
+    php7.3-zip \
     wget \
     curl \
-    mariadb-client
+    mariadb-client \
+    && rm -rf /var/lib/apt/lists/*
 
-# Configure PHP-FPM to listen on the network
-RUN sed -i 's/listen = \/run\/php\/php7.4-fpm.sock/listen = 9000/g' /etc/php/7.4/fpm/pool.d/www.conf
+# Configure PHP-FPM to listen on network
+RUN mkdir -p /run/php && \
+    sed -i 's/listen = \/run\/php\/php7.3-fpm.sock/listen = 9000/g' /etc/php/7.3/fpm/pool.d/www.conf
 
-# Create directory for PHP-FPM socket and PID file
-RUN mkdir -p /run/php
+# Copy WordPress setup script
+COPY ./conf/wp_setup.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/wp_setup.sh
 
-# Download WordPress
+# Set working directory
 WORKDIR /var/www/html
-RUN wget https://wordpress.org/latest.tar.gz && \
-    tar -xzf latest.tar.gz && \
-    mv wordpress/* . && \
-    rm -rf wordpress latest.tar.gz && \
-    chown -R www-data:www-data /var/www/html
-
-# Copy configuration script
-COPY ./conf/wp-config.sh /tmp/wp-config.sh
-RUN chmod +x /tmp/wp-config.sh
 
 # Expose port 9000
 EXPOSE 9000
 
-# Start PHP-FPM server
-ENTRYPOINT ["/tmp/wp-config.sh"]
+# Start PHP-FPM and run the WordPress setup script
+CMD ["/usr/local/bin/wp_setup.sh"]
 
 # FROM debian:bullseye
 

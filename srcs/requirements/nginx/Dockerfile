@@ -1,29 +1,26 @@
-FROM debian:bullseye
+FROM debian:buster
 
-# Install NGINX and SSL tools
-RUN apt-get update && apt-get install -y nginx openssl
+RUN apt-get update && apt-get install -y \
+    nginx \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy configuration
-COPY ./conf/nginx.conf /etc/nginx/sites-available/default
-COPY ./conf/setup.sh /tmp/setup.sh
+# Copy configuration files
+COPY ./conf/default.conf /etc/nginx/conf.d/
+COPY ./conf/ssl_setup.sh /tmp/
 
-# Make script executable
-RUN chmod +x /tmp/setup.sh
-
-# Create directories for SSL certificates
-RUN mkdir -p /etc/nginx/ssl
+# Make the script executable
+RUN chmod +x /tmp/ssl_setup.sh
 
 # Generate SSL certificate
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/nginx.key \
-    -out /etc/nginx/ssl/nginx.crt \
-    -subj "/C=FR/ST=IDF/L=Paris/O=42/OU=42/CN=localhost"
+RUN /tmp/ssl_setup.sh
 
-# Expose port 443
+# Expose HTTPS port
 EXPOSE 443
 
-# Run NGINX in foreground
-ENTRYPOINT ["/tmp/setup.sh"]
+# Start Nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]
+
 
 # FROM debian:bullseye
 

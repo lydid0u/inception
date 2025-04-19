@@ -1,54 +1,54 @@
 #!/bin/bash
 
-# Attendre plus longtemps pour MariaDB
-echo "Waiting for MariaDB to be fully initialized..."
-sleep 10  # Attendre 10 secondes avant de commencer les tests
-
-# Puis continuer avec vos tests de connexion
-while ! mariadb -h mariadb -u${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DATABASE} -e "SELECT 1;" > /dev/null 2>&1; do
+# Wait for MariaDB to be ready
+while ! mariadb -h mariadb -u${MYSQL_USER} -p${MYSQL_PASSWORD} -e "SELECT 1;" ${MYSQL_DATABASE} 2>/dev/null; do
     echo "Waiting for MariaDB to be ready..."
-    sleep 3
+    sleep 5
 done
 
-# Check if WordPress is already configured
+# Check if WordPress is already installed
 if [ ! -f /var/www/html/wp-config.php ]; then
+    echo "Setting up WordPress..."
+    
+    # Download WordPress
+    curl -O https://wordpress.org/latest.tar.gz
+    tar -xzf latest.tar.gz
+    cp -r wordpress/* /var/www/html/
+    rm -rf wordpress latest.tar.gz
+    
     # Create wp-config.php
     cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
-    
-    # Update database settings
     sed -i "s/database_name_here/${MYSQL_DATABASE}/g" /var/www/html/wp-config.php
     sed -i "s/username_here/${MYSQL_USER}/g" /var/www/html/wp-config.php
     sed -i "s/password_here/${MYSQL_PASSWORD}/g" /var/www/html/wp-config.php
     sed -i "s/localhost/mariadb/g" /var/www/html/wp-config.php
     
-    # Update security keys
-    KEYS=$(curl -s https://api.wordpress.org/secret-key/1.1/salt/)
-    KEYS="${KEYS//\//\\/}"
-    sed -i "/define( 'AUTH_KEY'/,/define( 'NONCE_SALT'/d" /var/www/html/wp-config.php
-    sed -i "/Put your unique phrase here/a\\${KEYS}" /var/www/html/wp-config.php
+    # Generate security keys
+    for key in AUTH_KEY SECURE_AUTH_KEY LOGGED_IN_KEY NONCE_KEY AUTH_SALT SECURE_AUTH_SALT LOGGED_IN_SALT NONCE_SALT; do
+        sed -i "s/define( '$key', '.*' );/define( '$key', '$(openssl rand -base64 64 | tr -d '\n\r' | sed "s/'//g" | cut -c1-64)' );/g" /var/www/html/wp-config.php
+    done
     
-    # Install WordPress using WP-CLI
-    wp core install --allow-root \
-        --url="${DOMAIN_NAME}" \
-        --title="${WP_TITLE}" \
-        --admin_user="${WP_ADMIN_USER}" \
-        --admin_password="${WP_ADMIN_PASSWORD}" \
-        --admin_email="${WP_ADMIN_EMAIL}" \
-        --path="/var/www/html" \
-        --skip-email
+    # Download WP-CLI
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    chmod +x wp-cli.phar
+    mv wp-cli.phar /usr/local/bin/wp
     
-    # Create a standard user
-    wp user create --allow-root \
-        "${WP_USER}" "${WP_USER_EMAIL}" \
-        --user_pass="${WP_USER_PASSWORD}" \
-        --role=author \
-        --path="/var/www/html"
+    # Install WordPress
+    cd /var/www/html
+    wp core install --url=${DOMAIN_NAME} --title=${WP_TITLE} --admin_user=${WP_ADMIN_USER} --admin_password=${WP_ADMIN_PASSWORD} --admin_email=${WP_ADMIN_EMAIL} --allow-root
     
-    echo "WordPress has been successfully configured!"
+    # Create additional user
+    wp user create ${WP_USER} ${WP_USER_EMAIL} --user_pass=${WP_USER_PASSWORD} --role=author --allow-root
+    
+    echo "WordPress setup completed."
 fi
 
+# Ensure correct ownership
+chown -R www-data:www-data /var/www/html
+
 # Start PHP-FPM
-php-fpm7.4 -F
+echo "Starting PHP-FPM..."
+php-fpm7.3 -F
 
 # #!/bin/bash
 

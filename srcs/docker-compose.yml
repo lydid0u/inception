@@ -1,4 +1,4 @@
-version: '3'
+version: '3.7'
 
 services:
   nginx:
@@ -10,11 +10,11 @@ services:
       - "443:443"
     volumes:
       - wordpress_data:/var/www/html
-    depends_on:
-      - wordpress
-    restart: always
     networks:
       - inception_network
+    depends_on:
+      - wordpress
+    restart: on-failure
 
   wordpress:
     container_name: wordpress
@@ -25,11 +25,11 @@ services:
       - wordpress_data:/var/www/html
     depends_on:
       - mariadb
-    restart: always
-    env_file:
-      - .env
     networks:
       - inception_network
+    env_file:
+      - .env
+    restart: on-failure
 
   mariadb:
     container_name: mariadb
@@ -38,11 +38,15 @@ services:
       dockerfile: Dockerfile
     volumes:
       - mariadb_data:/var/lib/mysql
-    restart: always
-    env_file:
-      - .env
     networks:
       - inception_network
+    env_file:
+      - .env
+    restart: on-failure
+
+networks:
+  inception_network:
+    driver: bridge
 
 volumes:
   wordpress_data:
@@ -55,12 +59,8 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /home/${USER}/data/mariadb
+      device: /home/${USER}/data/mysql
       o: bind
-
-networks:
-  inception_network:
-    driver: bridge
 
 # version: '3.7'
 
