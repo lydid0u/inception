@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# Wait for MariaDB to be ready
+# Attendre plus longtemps pour MariaDB
+echo "Waiting for MariaDB to be fully initialized..."
+sleep 10  # Attendre 10 secondes avant de commencer les tests
+
+# Puis continuer avec vos tests de connexion
 while ! mariadb -h mariadb -u${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DATABASE} -e "SELECT 1;" > /dev/null 2>&1; do
     echo "Waiting for MariaDB to be ready..."
     sleep 3

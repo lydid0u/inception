@@ -2,16 +2,16 @@ FROM debian:bullseye
 
 # Install PHP and required extensions
 RUN apt-get update && apt-get install -y \
-    php7.3-fpm \
-    php7.3-mysql \
-    php7.3-curl \
-    php7.3-gd \
-    php7.3-intl \
-    php7.3-mbstring \
-    php7.3-soap \
-    php7.3-xml \
-    php7.3-xmlrpc \
-    php7.3-zip \
+    php7.4-fpm \
+    php7.4-mysql \
+    php7.4-curl \
+    php7.4-gd \
+    php7.4-intl \
+    php7.4-mbstring \
+    php7.4-soap \
+    php7.4-xml \
+    php7.4-xmlrpc \
+    php7.4-zip \
     wget \
     curl \
     mariadb-client
